@@ -7,7 +7,8 @@ use_here <- function(){
     files <- list.files(wd, pattern="\\.R(md)?$", ignore.case=TRUE, recursive=TRUE)
     # if it's an R package remove the files in the R/ directory
     # and the ones in the test directory
-    if(is_r_package$desc=="contains a file \"DESCRIPTION\" with contents matching \"^Package: \""){
+    descp <- file.path(wd, "DESCRIPTION")
+    if(file.exists(descp) && any(grepl("^Package: ", descp, fixed=T))){
         files <- files[!grepl("^(R|tests|vignettes)", files)]
     } 
     # get the files that were modified
