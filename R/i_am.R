@@ -43,7 +43,7 @@
 #' }
 i_am <- function(path, ..., uuid = NULL) {
   stopifnot(length(list(...)) == 0)
-
+  path <- paste0(path, collapse=.Platform$file.sep)
   criterion <- has_file(path, contents = uuid, n = 100, fixed = TRUE)
   tryCatch(
     root_fun <- criterion$make_fix_file(),
