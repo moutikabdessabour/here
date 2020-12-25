@@ -11,9 +11,8 @@ use_here <- function(){
         files <- files[!grepl("^(R|tests|vignettes)", files)]
     } 
     # get the files that were modified
-    files <- sapply(files, prepend_i_am)
-    # print them
-    cat(unlist(files), sep="\n")
+    sapply(files, prepend_i_am)
+    invisible()
 }
 
 prepend_i_am <- function(x, is_rmarkdown = grepl("\\.Rmd$", x, ignore.case = TRUE)){
