@@ -1,22 +1,23 @@
 #' @export
 use_here <- function(){
-    # get the working directory 
+    # get the working directory
     # used here::: just to test
     wd <- .root_env$root$wd
     # get the R(md) files in the folder tree
-    files <- list.files(wd, pattern="\\.R(md)?$", ignore.case=TRUE, recursive=TRUE)
+    files <- list.files(wd, pattern = "\\.R(md)?$", ignore.case = TRUE, recursive = TRUE)
     # if it's an R package remove the files in the R/ directory
     # and the ones in the test directory
-    descp <- file.path(wd, "DESCRIPTION")
-    if(file.exists(descp) && any(grepl("^Package: ", descp, fixed=T))){
+    is_pkg <- tryCatch({is_r_package$make_fix_file(); TRUE}, error = function(...) FALSE)
+    if(is_pkg){
         files <- files[!grepl("^(R|tests|vignettes)", files)]
-    } 
+    }
     # get the files that were modified
-    sapply(files, prepend_i_am)
-    invisible()
+
+    invisible(map_chr(files, prepend_i_am))
 }
 
-prepend_i_am <- function(x, is_rmarkdown = grepl("\\.Rmd$", x, ignore.case = TRUE)){
+prepend_i_am <- function(x){
+    is_rmarkdown <- grepl("\\.Rmd$", x, ignore.case = TRUE)
     # read the lines
     lines <- readLines(x)
     # check if a here::i_am call is made
@@ -27,22 +28,22 @@ prepend_i_am <- function(x, is_rmarkdown = grepl("\\.Rmd$", x, ignore.case = TRU
         # get the line of the call
         which(has_i_am)[1] -> line
         # if it's already in the first line return
-        if(line==1) return()
+        if(line == 1) return()
         # grab the here_string defined by the user might not contain a uuid
         here_string <- sub("(here::i_am\\(.+?\\) *;?)", "\\1", lines[line])
         # remove the call
-        lines[line] <- sub(here_string, "", lines[line], fixed=T)
+        lines[line] <- sub(here_string, "", lines[line], fixed = TRUE)
     }
     if(is_rmarkdown){
         # get the first code chunk
-        add_here <- grep("``` *\\{ *r.+?\\}", lines, ignore.case=TRUE)[1] 
+        add_here <- grep("``` *\\{ *r.+?\\}", lines, ignore.case = TRUE)[1]
         # if it's already on the first line bail
         if(any(has_i_am) && line==add_here+1) return()
         # add it directly after the opening of the chunk
-        lines <- c(lines[1:add_here], here_string, lines[-(1:add_here)])
+        lines <- c(lines[seq_len(add_here)], here_string, lines[-seq_len(add_here)])
     }else{
         # add it to the first line
-        lines <- c(here_string, lines)    
+        lines <- c(here_string, lines)
     }
     # write the modified lines
     writeLines(lines, con = x)
